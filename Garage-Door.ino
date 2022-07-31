@@ -5,7 +5,7 @@
     - Switch leg 2 - D2/GPIO4 - GND
 
 
-   Configuration (HA) : 
+   Configuration (HA) :
     switchs.yaml
       - platform: mqtt
         name: "NBPT switch1"
@@ -27,28 +27,26 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 
-
-
 #define MQTT_VERSION MQTT_VERSION_3_1_1
 
 // Wifi: SSID and password
-const char* WIFI_SSID = "hurd";
-const char* WIFI_PASSWORD = "7487356660hrd";
+const char *WIFI_SSID = "hurd";
+const char *WIFI_PASSWORD = "7487356660hrd";
 
 // MQTT: ID, server IP, port, username and password
-const PROGMEM char* MQTT_CLIENT_ID = "NBPT_switch1_00001";
-const PROGMEM char* MQTT_SERVER_IP = "192.168.101.79";
+const PROGMEM char *MQTT_CLIENT_ID = "NBPT_switch1_00001";
+const PROGMEM char *MQTT_SERVER_IP = "192.168.101.79";
 const PROGMEM uint16_t MQTT_SERVER_PORT = 1883;
-const PROGMEM char* MQTT_USER = "homeassistant";
-const PROGMEM char* MQTT_PASSWORD = "xee5phuqua6wei3eyahZineNg1equ4ausishaigieThah4Quee7keica3phahch5";
+const PROGMEM char *MQTT_USER = "homeassistant";
+const PROGMEM char *MQTT_PASSWORD = "xee5phuqua6wei3eyahZineNg1equ4ausishaigieThah4Quee7keica3phahch5";
 
 // MQTT: topics
-const char* MQTT_SWITCH_STATE_TOPIC = "NBPT/switch/state";
-const char* MQTT_SWITCH_COMMAND_TOPIC = "NBPT/switch/set";
+const char *MQTT_SWITCH_STATE_TOPIC = "NBPT/switch/state";
+const char *MQTT_SWITCH_COMMAND_TOPIC = "NBPT/switch/set";
 
 // payloads by default (on/off)
-const char* SWITCH_ON = "ON";
-const char* SWITCH_OFF = "OFF";
+const char *SWITCH_ON = "ON";
+const char *SWITCH_OFF = "OFF";
 
 // KEY:D1/GPIO5 SENOR:D2/GPIO4
 const PROGMEM uint8_t KEY_PIN = 5;
@@ -57,83 +55,100 @@ const PROGMEM uint8_t BUTTON_PIN = 4;
 boolean m_switch_state = false; // switch is turned off by default
 
 int buttonState;             // the current reading from the input pin
-int last_switch_state = LOW;   // the previous reading from the input pin
+int last_switch_state = LOW; // the previous reading from the input pin
 
 // the following variables are unsigned longs because the time, measured in
 // milliseconds, will quickly become a bigger number than can be stored in an int.
-unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
-unsigned long debounceDelay = 50;    // the debounce time; increase if the output flickers
+unsigned long lastDebounceTime = 0; // the last time the output pin was toggled
+unsigned long debounceDelay = 50;   // the debounce time; increase if the output flickers
 
 WiFiClient wifiClient;
 PubSubClient client(wifiClient);
 
-
 // function called to publish the state of the switch (on/off)
-void publishSwitchState() {
-  if (m_switch_state) {
+void publishSwitchState()
+{
+  if (m_switch_state)
+  {
     client.publish(MQTT_SWITCH_STATE_TOPIC, SWITCH_ON, true);
-  } else {
+  }
+  else
+  {
     client.publish(MQTT_SWITCH_STATE_TOPIC, SWITCH_OFF, true);
   }
 }
 
 // function called to turn on/off the switch
-void setSwitchState() {
-    digitalWrite(KEY_PIN, HIGH);
-    Serial.println("INFO: Turn switch on...");
-    client.publish(MQTT_SWITCH_STATE_TOPIC, SWITCH_ON, true);
-    delay(500);
-    digitalWrite(KEY_PIN, LOW);
-    Serial.println("INFO: Turn switch off...");
-    client.publish(MQTT_SWITCH_STATE_TOPIC, SWITCH_OFF, true);
-/*  if (m_switch_state) {
-    digitalWrite(KEY_PIN, HIGH);
-    Serial.println("INFO: Turn switch on...");
-  } else {
-    digitalWrite(KEY_PIN, LOW);
-    Serial.println("INFO: Turn switch off...");
-  }*/
+void setSwitchState()
+{
+  digitalWrite(KEY_PIN, HIGH);
+  Serial.println("INFO: Turn switch on...");
+  client.publish(MQTT_SWITCH_STATE_TOPIC, SWITCH_ON, true);
+  delay(500);
+  digitalWrite(KEY_PIN, LOW);
+  Serial.println("INFO: Turn switch off...");
+  client.publish(MQTT_SWITCH_STATE_TOPIC, SWITCH_OFF, true);
+  /*  if (m_switch_state) {
+      digitalWrite(KEY_PIN, HIGH);
+      Serial.println("INFO: Turn switch on...");
+    } else {
+      digitalWrite(KEY_PIN, LOW);
+      Serial.println("INFO: Turn switch off...");
+    }*/
 }
 
 // function called when a MQTT message arrived
-void callback(char* p_topic, byte* p_payload, unsigned int p_length) {
+void callback(char *p_topic, byte *p_payload, unsigned int p_length)
+{
   // concat the payload into a string
   String payload;
-  for (uint8_t i = 0; i < p_length; i++) {
+  for (uint8_t i = 0; i < p_length; i++)
+  {
     payload.concat((char)p_payload[i]);
   }
-  
+
   // handle message topic
-  if (String(MQTT_SWITCH_COMMAND_TOPIC).equals(p_topic)) {
+  if (String(MQTT_SWITCH_COMMAND_TOPIC).equals(p_topic))
+  {
     // test if the payload is equal to "ON" or "OFF"
-    if (payload.equals(String(SWITCH_ON))) {
-      if (m_switch_state != true) {
+    if (payload.equals(String(SWITCH_ON)))
+    {
+      if (m_switch_state != true)
+      {
         m_switch_state = true;
         setSwitchState();
-        //publishSwitchState();
+        // publishSwitchState();
       }
-    } else if (payload.equals(String(SWITCH_OFF))) {
-      if (m_switch_state != false) {
+    }
+    else if (payload.equals(String(SWITCH_OFF)))
+    {
+      if (m_switch_state != false)
+      {
         m_switch_state = false;
         setSwitchState();
-        //publishSwitchState();
+        // publishSwitchState();
       }
     }
   }
 }
 
-void reconnect() {
+void reconnect()
+{
   // Loop until we're reconnected
-  while (!client.connected()) {
+  while (!client.connected())
+  {
     Serial.println("INFO: Attempting MQTT connection...");
     // Attempt to connect
-    if (client.connect(MQTT_CLIENT_ID, MQTT_USER, MQTT_PASSWORD)) {
+    if (client.connect(MQTT_CLIENT_ID, MQTT_USER, MQTT_PASSWORD))
+    {
       Serial.println("INFO: connected");
       // Once connected, publish an announcement...
       publishSwitchState();
       // ... and resubscribe
       client.subscribe(MQTT_SWITCH_COMMAND_TOPIC);
-    } else {
+    }
+    else
+    {
       Serial.print("ERROR: failed, rc=");
       Serial.print(client.state());
       Serial.println("DEBUG: try again in 5 seconds");
@@ -143,7 +158,8 @@ void reconnect() {
   }
 }
 
-void ReadPin() {
+void ReadPin()
+{
   // read the state of the switch into a local variable:
   int reading = digitalRead(BUTTON_PIN);
 
@@ -152,33 +168,37 @@ void ReadPin() {
   // since the last press to ignore any noise:
 
   // If the switch changed, due to noise or pressing:
-  if (reading != last_switch_state) {
+  if (reading != last_switch_state)
+  {
     // reset the debouncing timer
     lastDebounceTime = millis();
   }
 
-  if ((millis() - lastDebounceTime) > debounceDelay) {
+  if ((millis() - lastDebounceTime) > debounceDelay)
+  {
     // whatever the reading is at, it's been there for longer than the debounce
     // delay, so take it as the actual current state:
 
     // if the button state has changed:
-    if (reading != m_switch_state) {
+    if (reading != m_switch_state)
+    {
       m_switch_state = reading;
       publishSwitchState();
 
       // only toggle the LED if the new button state is HIGH
- //     if (buttonState == HIGH) {
- //       ledState = !ledState;
- //     }
+      //     if (buttonState == HIGH) {
+      //       ledState = !ledState;
+      //     }
     }
   }
   // set the LED:
- // digitalWrite(ledPin, ledState);
+  // digitalWrite(ledPin, ledState);
 
   // save the reading. Next time through the loop, it'll be the lastButtonState:
   last_switch_state = reading;
 }
-void setup() {
+void setup()
+{
   // init the serial
   Serial.begin(115200);
 
@@ -186,7 +206,7 @@ void setup() {
   pinMode(BUTTON_PIN, INPUT);
   pinMode(KEY_PIN, OUTPUT);
   analogWriteRange(255);
-  //setSwitchState();
+  // setSwitchState();
 
   // init the WiFi connection
   Serial.println();
@@ -196,7 +216,8 @@ void setup() {
   Serial.println(WIFI_SSID);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
-  while (WiFi.status() != WL_CONNECTED) {
+  while (WiFi.status() != WL_CONNECTED)
+  {
     delay(500);
     Serial.print(".");
   }
@@ -211,9 +232,11 @@ void setup() {
   client.setCallback(callback);
 }
 
-void loop() {
+void loop()
+{
   ReadPin();
-  if (!client.connected()) {
+  if (!client.connected())
+  {
     reconnect();
   }
   client.loop();
